@@ -532,8 +532,12 @@ function englishPeriodLabel(){
   return `${months[sd.getMonth()]} ${sd.getFullYear()} ~ ${months[ed.getMonth()]} ${ed.getFullYear()}`;
 }
 /* 下載/分享檔名：yyyy年mm月~yyyy年mm月七樓電費與水費 */
-function reportFileNameBase() {
-    return `${periodLabel().replace(/～/g, '~')}七樓電費與水費`;
+function reportFileNameBase(){
+  const s = document.getElementById('e2_1_start').value;
+  const e = document.getElementById('e2_1_end').value;
+  if(!s || !e) return '七樓電費與水費計算表';
+  const sd = new Date(s), ed = new Date(e);
+  return `${sd.getFullYear()}年${pad2(sd.getMonth()+1)}月~${ed.getFullYear()}年${pad2(ed.getMonth()+1)}月七樓電費與水費`;
 }
 
 /* ============ 建立電價表輸入列 ============ */
@@ -718,6 +722,131 @@ async function tryFetchTaipowerData(){
     el.textContent = '無法自動取得資料（可能因瀏覽器跨網域限制），請點擊上方連結至台電網站手動核對電價：\n' + err;
   }
 }
+
+// /* ============ EXCEL 匯出 ============ */
+// function cmToPx(cm){ return cm / 2.54 * 96; }
+
+// async function addImageRow(wb, ws, rState, key, label){
+//   ws.getRow(rState.r).getCell(1).value = label;
+//   rState.r++;
+//   const p = photos[key];
+//   if(p){
+//     const widthPx = cmToPx(5);
+//     const heightPx = widthPx * (p.h / p.w);
+//     const isPng = p.dataUrl.indexOf('image/png') !== -1;
+//     const imgId = wb.addImage({ base64: p.dataUrl, extension: isPng ? 'png' : 'jpeg' });
+//     ws.addImage(imgId, { tl:{ col:0, row: rState.r - 1 }, ext:{ width: widthPx, height: heightPx } });
+//     const rowsNeeded = Math.max(Math.ceil(heightPx / 20), 1) + 1;
+//     rState.r += rowsNeeded;
+//   } else {
+//     ws.getRow(rState.r).getCell(1).value = '(尚未上傳)';
+//     rState.r += 2;
+//   }
+// }
+
+// function getHint(id){
+
+//     const el = document.getElementById(id);
+//     if(!el) return '';
+//     const field = el.closest('.field');
+//     if(!field) return '';
+//     const hint = field.querySelector('.hint');
+//     return hint ? hint.textContent.trim() : '';
+// }
+
+// async function exportExcel(){
+//   const wb = new ExcelJS.Workbook();
+//   const ws = wb.addWorksheet('七樓電費水費');
+//   ws.columns = [
+//     {width:32},
+//     {width:45},
+//     {width:25}
+//   ];
+//   const rState = { r: 1 };
+//   const addRow = (cells)=>{
+//     ws.getRow(rState.r).values = cells;
+//     rState.r++;
+// };
+
+//   addRow(['七樓電費與水費計算表']); rState.r++;
+
+//   addRow(['電費']);
+//   addRow(['1. 目前電價表(住宅用)']);
+//   addRow(['級距','非夏月電價','夏月電價']);
+//   priceTiers.forEach((t,i)=> addRow([t.label, getVal('tier_ns_'+i), getVal('tier_s_'+i)]));
+//   rState.r++;
+
+//   addRow(['2. 電費帳單資訊']);
+//   addRow([
+// '2-1 電費帳單－計算期間',
+// getHint('e2_1_start'),
+// (document.getElementById('e2_1_start').value||'') 
+// + ' 至 ' +
+// (document.getElementById('e2_1_end').value||'')
+// ]);
+//   addRow([
+// '2-2 電費帳單－總天數',
+// getHint('e2_2'),
+// document.getElementById('e2_2').value
+// ]);
+//   addRow(['2-3 夏季天數/占比', document.getElementById('e2_3').value]);
+//   addRow(['2-4 非夏季天數/占比', document.getElementById('e2_4').value]);
+//   addRow(['2-5 總用電度數', getVal('e2_5')]);
+//   addRow(['2-6 補收(退)金額(含停電扣減)', getVal('e2_6')]);
+//   addRow(['2-7 節電獎勵', getVal('e2_7')]);
+//   await addImageRow(wb, ws, rState, 'e2_8', '2-8 電費帳單照片');
+
+//   addRow(['3. 七樓電表']);
+//   addRow(['3-1 抄表日期', document.getElementById('e3_1').value]);
+//   addRow(['3-2 上期電表度數', getVal('e3_2')]);
+//   addRow(['3-3 本期電表度數', getVal('e3_3')]);
+//   addRow(['3-4 本期用電度數', document.getElementById('e3_4').value]);
+//   await addImageRow(wb, ws, rState, 'e3_5', '3-5 七樓電表照片');
+
+//   addRow(['4. 七樓電費']);
+//   addRow(['4-1 流動電費', document.getElementById('e4_1').value]);
+//   addRow(['級距','非夏月','夏月','小計']);
+//   lastTierRows.forEach(r=> addRow([r.label, `${r.nsKwh.toFixed(2)}度×${r.ns}=${fmt(r.nsCost)}`, `${r.sKwh.toFixed(2)}度×${r.s}=${fmt(r.sCost)}`, fmt(r.subtotal)]));
+//   addRow(['4-2 公共設施電費', document.getElementById('e4_2').value]);
+//   addRow(['4-3 補收(退)金額', document.getElementById('e4_3').value]);
+//   addRow(['4-4 節電獎勵', document.getElementById('e4_4').value]);
+//   addRow(['4-5 本期電費', document.getElementById('e4_5').value]);
+//   addRow([document.getElementById('e4_5_formula').textContent]);
+//   rState.r++;
+
+//   addRow(['水費']);
+//   addRow(['5. 水費帳單資訊']);
+//   addRow(['5-1 用水計算期間', (document.getElementById('e5_1_start').value||'') + ' 至 ' + (document.getElementById('e5_1_end').value||'')]);
+//   addRow(['5-2 總天數', document.getElementById('e5_2').value]);
+//   addRow(['5-3 本期用水度數', getVal('e5_3')]);
+//   addRow(['5-4 基本費', getVal('e5_4')]);
+//   addRow(['5-5 用水費', getVal('e5_5')]);
+//   addRow(['5-6 代徵費', getVal('e5_6')]);
+//   await addImageRow(wb, ws, rState, 'e5_7', '5-7 水費帳單照片');
+
+//   addRow(['6. 七樓水表']);
+//   addRow(['6-1 抄表日期', document.getElementById('e6_1').value]);
+//   addRow(['6-2 上期水表度數', getVal('e6_2')]);
+//   addRow(['6-3 本期水表度數', getVal('e6_3')]);
+//   addRow(['6-4 本期用水度數', document.getElementById('e6_4').value]);
+//   await addImageRow(wb, ws, rState, 'e6_5', '6-5 七樓水表照片');
+
+//   addRow(['7. 七樓水費']);
+//   addRow(['7-1 基本費', document.getElementById('e7_1').value]);
+//   addRow(['7-2 用水費', document.getElementById('e7_2').value]);
+//   addRow(['7-3 代徵費', document.getElementById('e7_3').value]);
+//   addRow(['7-4 本期水費', document.getElementById('e7_4').value]);
+//   addRow([document.getElementById('e7_4_formula').textContent]);
+//   rState.r++;
+
+//   addRow(['七樓電費與水費加總']);
+//   addRow(['8. ' + document.getElementById('periodLabel').textContent + ' 七樓-電費與水費', document.getElementById('e8_total').textContent]);
+
+//   const buf = await wb.xlsx.writeBuffer();
+//   downloadBlob(buf, reportFileNameBase() + '.xlsx', 'application/octet-stream');
+// }
+
+
 
 
 /* ============ EXCEL 匯出 ============ */
@@ -1421,9 +1550,10 @@ ws.views=[
 
 const buf = await wb.xlsx.writeBuffer();
 
+
 downloadBlob(
     buf,
-    reportFileNameBase() + '.xlsx',
+    reportFileNameBase()+'.xlsx',
     'application/octet-stream'
 );
 
@@ -1619,6 +1749,53 @@ function buildPdfPrintElement(widthCm){
   return wrap;
 }
 
+// /* ============ PDF 匯出（以正體中文顯示，透過 html2canvas 擷取實際渲染畫面，避免亂碼；整體等比縮放確保集中於A4單頁不裁切）============ */
+// async function exportPDF(){
+//   const { jsPDF } = window.jspdf;
+//   const pageW = 21, pageH = 29.7;
+//   const margin = 1.2;
+//   const contentW = pageW - margin*2;
+
+//   const printEl = buildPdfPrintElement(contentW);
+//   document.body.appendChild(printEl);
+
+//   try{
+//     const canvas = await html2canvas(printEl, { scale: 5, backgroundColor: '#ffffff', useCORS: true, logging:false });
+//     const imgData = canvas.toDataURL('image/jpeg');
+//     const aspect = canvas.height / canvas.width;
+
+//     let imgW = contentW;
+//     let imgH = contentW * aspect;
+//     const usableH = pageH - margin*2;
+//     let x = margin, y = margin;
+//     if(imgH > usableH){
+//       const scale = usableH / imgH;
+//       imgW = imgW * scale;
+//       imgH = usableH;
+//       x = margin + (contentW - imgW) / 2;
+//     }
+
+//     const doc = new jsPDF({ unit:'cm', format:'a4' });
+//     doc.addImage(imgData, 'JPEG', x, y, imgW, imgH);
+//     doc.save(reportFileNameBase() + '.pdf');
+//   } finally {
+//     document.body.removeChild(printEl);
+//   }
+// }
+
+// /* ============ 分享至 LINE（正體中文內容）============ */
+// function shareToLine(){
+//   const { title, model } = buildReportModelZh();
+//   const lines = [title, ''];
+//   model.forEach(item=>{
+//     if(item.type === 'heading'){ lines.push(''); lines.push('【' + item.text + '】'); }
+//     else { lines.push((item.neg ? '* ' : '') + item.text); }
+//   });
+//   const text = lines.join('\n');
+//   const url = 'https://line.me/R/msg/text/?' + encodeURIComponent(text);
+//   window.open(url, '_blank');
+// }
+
 /* =========================================================
    PDF產生核心
    HTML → html2canvas → jsPDF → File
@@ -1739,12 +1916,23 @@ async function createPDFFile(){
         const blob = doc.output('blob');
 
 
+
+        // 轉 File
+
         const file = new File(
-            [blob],
+
+            [
+                blob
+            ],
+
             reportFileNameBase() + '.pdf',
+
             {
+
                 type:'application/pdf'
+
             }
+
         );
 
 
@@ -1866,7 +2054,8 @@ async function shareToLine(){
                       await navigator.share({
                           title:
                 "PDF文件",
-                text:"請查看附件 七樓－電費與水費 PDF",
+                                text:
+                "請查看附件 PDF",
                                 files:[
 
                     pdfFile
