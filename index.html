@@ -1,0 +1,2112 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>七樓電費與水費計算表</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ffffff;
+    --card:#fdfdfd;
+    --ink:#20231F;
+    --sub:#6B6A63;
+    --line:#d3d3d3;
+    --electric:#2196F3;
+    --electric-soft:#2195f311;
+    --water:#009688;
+    --water-soft:#00968713;
+    --total:#ff5e00;
+    --total-soft:#ff5e0011;
+    --neg:#e01406;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Noto Sans TC", sans-serif;
+    line-height:1.6;
+    padding:0 0 60px;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:32px 20px 0;}
+  h1.page-title{
+    font-family:"Noto Serif TC", serif;
+    font-weight:700;
+    font-size:32px;
+    text-align:center;
+    letter-spacing:.04em;
+    margin:0 0 6px;
+    border-bottom:3px solid var(--ink);
+    padding-bottom:18px;
+  }
+  .page-sub{
+    text-align:center;color:var(--sub);font-size:13px;margin:8px 0 36px;
+    letter-spacing:.05em;
+  }
+  h2.section-title{
+    font-family:"Noto Serif TC", serif;
+    font-size:22px;
+    font-weight:700;
+    display:flex;align-items:center;gap:12px;
+    margin:48px 0 20px;
+  }
+  h2.section-title .dial{
+    width:38px;height:38px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-family:"JetBrains Mono",monospace;font-weight:700;font-size:14px;color:#fff;
+    flex:none;
+  }
+  .sec-electric .dial{background:var(--electric);}
+  .sec-water .dial{background:var(--water);}
+  .sec-total .dial{background:var(--total);}
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:22px 24px;
+    margin-bottom:18px;
+  }
+  .card h3{
+    font-family:"JetBrains Mono",monospace;
+    font-size:14px;
+    letter-spacing:.03em;
+    margin:0;
+    padding-bottom:10px;
+    /* border-bottom:1px dashed var(--line); */
+    color:var(--sub);
+    font-weight:700;
+  }
+  .card h3 span.num{
+    display:inline-block;width:26px;height:26px;border-radius:6px;
+    background:var(--ink);color:#fff;text-align:center;line-height:26px;
+    margin-right:8px;font-size:13px;
+  }
+  .sec-electric .card h3 span.num{background:var(--electric);}
+  .sec-water .card h3 span.num{background:var(--water);}
+  .sec-total .card h3 span.num{background:var(--total);}
+
+  .field{margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{
+    display:block;font-weight:500;font-size:14.5px;margin-bottom:3px;
+  }
+  .field .hint{font-size:12.5px;color:var(--sub);margin-bottom:6px;}
+  .field input[type=number],
+  .field input[type=date],
+  .field input[type=text]{
+    width:100%;
+    padding:8px 10px;
+    border:1px solid var(--line);
+    border-radius:6px;
+    font-family:"JetBrains Mono",monospace;
+    font-size:14.5px;
+    background:#fff;
+  }
+  .field input[readonly]{
+    background:#f1f1f1;color:var(--ink);font-weight:700;
+  }
+  .field input.negative{color:var(--neg) !important;}
+  .date-range{display:flex;align-items:center;gap:8px;}
+  .date-range span{color:var(--sub);font-size:13px;flex:none;}
+  .date-range input{flex:1;}
+
+  .photo-box{
+    border:2px dashed var(--line);
+    border-radius:10px;
+    min-height:160px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;background:#fbfbfb;
+    position:relative;overflow:hidden;padding:14px;
+    transition:border-color .15s;
+  }
+  .photo-box:hover{border-color:var(--sub);}
+  .photo-box .photo-placeholder{color:var(--sub);font-size:14px;}
+  .photo-box img.photo-preview{
+    display:none;max-width:100%;min-width:260px;width:350px;height:auto;
+    border-radius:6px;margin:0 auto;
+  }
+
+  table.tier-table{width:100%;border-collapse:collapse;font-family:"JetBrains Mono",monospace;font-size:13px;margin-top:4px;}
+  table.tier-table th,table.tier-table td{border:1px solid var(--line);padding:7px 8px;text-align:right;}
+  table.tier-table th:first-child,table.tier-table td:first-child{text-align:left;}
+  table.tier-table th{background:var(--electric-soft);font-weight:700;}
+  table.tier-table td.negative{color:var(--neg);}
+
+  .price-table-row{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:10px;align-items:center;margin-bottom:8px;}
+  .price-table-row.head{font-weight:700;color:var(--sub);font-size:12.5px;}
+  .price-table-row label{font-size:13.5px;}
+  .price-table-row input{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-family:"JetBrains Mono",monospace;}
+  details.api-note{margin-top:14px;font-size:12.5px;color:var(--sub);}
+  details.api-note summary{cursor:pointer;}
+  details.api-note pre{white-space:pre-wrap;word-break:break-all;background:#f1f1f1;padding:10px;border-radius:6px;max-height:220px;overflow:auto;}
+
+  .formula-line{
+    font-family:"JetBrains Mono",monospace;font-size:13.5px;color:var(--sub);
+    margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);
+  }
+
+  .grand-total{
+    text-align:center;padding:26px 10px;
+  }
+  .grand-total .period{font-family:"JetBrains Mono",monospace;font-size:16px;color:var(--sub);margin-bottom:10px;}
+  .grand-total .amount{
+    font-family:"Noto Serif TC",serif;
+    font-weight:700;font-size:44px;color:var(--total);
+  }
+
+  .actions{
+    display:flex;gap:14px;justify-content:center;margin-top:44px;flex-wrap:wrap;
+  }
+  .actions button{
+    font-family:"Noto Sans TC",sans-serif;
+    font-weight:700;font-size:15px;
+    padding:14px 28px;border-radius:8px;border:none;cursor:pointer;
+    background:var(--ink);color:#fff;
+    transition:opacity .15s;
+  }
+  .actions button:hover{opacity:.85;}
+  .actions button.pdf{background:#cd1609;}
+  .actions button.excel{background:#1D6F42;}
+  .actions button.line{background:#06C755;}
+  .footnote{
+    max-width:920px;margin:36px auto 0;padding:0 20px;font-size:12.5px;color:var(--sub);
+  }
+  .price-table-row input.negative,
+  table.tier-table td.negative{color:var(--neg) !important;}
+
+  /* ================= RWD ================= */
+  @media (max-width:720px){
+    .wrap{padding:20px 14px 0;}
+    h1.page-title{font-size:24px;padding-bottom:14px;}
+    .page-sub{font-size:12px;margin:6px 0 26px;}
+    h2.section-title{font-size:18px;margin:34px 0 16px;gap:8px;}
+    h2.section-title .dial{width:32px;height:32px;font-size:12px;}
+    .card{padding:16px 14px;margin-bottom:14px;}
+    .card h3{font-size:12.5px;}
+    .card h3 span.num{width:22px;height:22px;line-height:22px;font-size:12px;}
+    .field label{font-size:13.5px;}
+    .field .hint{font-size:11.5px;}
+    .field input[type=number],
+    .field input[type=date],
+    .field input[type=text]{font-size:14px;padding:8px 9px;}
+    .date-range{flex-wrap:wrap;flex-direction: column;}
+    .date-range input{min-width:130px;}
+    .photo-box{min-height:120px;padding:10px;}
+    .photo-box img.photo-preview{min-width:0;width:100%;}
+    table.tier-table{display:block;overflow-x:auto;white-space:nowrap;font-size:11.5px;}
+    .price-table-row{
+      /* grid-template-columns:1fr; */
+      gap:4px;text-align:left;margin-bottom:14px;padding-bottom:10px;border-bottom:1px dashed var(--line);}
+    /* .price-table-row.head{display:none;} */
+    .price-table-row label{font-weight:700;}
+    .grand-total .amount{font-size:32px;}
+    .grand-total .period{font-size:13px;}
+    .actions{gap:10px;margin-top:32px;}
+    .actions button{flex:1 1;padding:13px 10px;font-size:13.5px;}
+    .footnote{font-size:11.5px;padding:0 14px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="page-title">七樓電費與水費計算表</h1>
+  <div class="page-sub">季節天數比例分攤・自動試算</div>
+
+  <!-- ================= 電費 ================= -->
+  <section class="sec-electric">
+    <h2 class="section-title"><span class="dial">電</span>電費</h2>
+
+    <div class="card">
+      <h3><span class="num">1</span>目前電價表（住宅用）</h3>
+      <div class="price-table-row head">
+        <div>級距</div><div>非夏月電價（元/度）</div><div>夏月電價（元/度）</div>
+      </div>
+      <div id="priceTableRows"></div>
+      <details class="api-note">
+        <summary>資料來源／台電開放資料比對（點擊展開）</summary>
+        <div style="margin-top:8px;">
+          來源：<a href="https://service.taipower.com.tw/data/opendata/apply/file/d007008/001.json" target="_blank" rel="noopener">台電開放資料 d007008（住宅用電價）</a>。
+          由於瀏覽器可能無法直接讀取台電網站資料（跨網域限制），以上電價已預先填入目前公告的住宅用累進費率，<strong>請自行點擊來源連結核對最新電價後，於上方欄位手動修改</strong>。下方為系統嘗試自動抓取的原始資料（若抓取失敗則顯示錯誤訊息，不影響手動使用）：
+          <pre id="apiRawData">尚未取得資料...</pre>
+        </div>
+      </details>
+    </div>
+
+    <div class="card">
+      <h3><span class="num">2</span>電費帳單資訊</h3>
+      <div class="field">
+        <label>2-1. 電費帳單－計算期間</label>
+        <div class="hint">請查看帳單「計費期間」後手動輸入</div>
+        <div class="date-range">
+          <input type="date" id="e2_1_start"><span>至</span><input type="date" id="e2_1_end">
+        </div>
+      </div>
+      <div class="field">
+        <label>2-2. 電費帳單－總天數</label>
+        <div class="hint">依據2-1自動計算</div>
+        <input type="text" id="e2_2" readonly>
+      </div>
+      <div class="field">
+        <label>2-3. 電費帳單－夏季天數 / 占比</label>
+        <div class="hint">依據2-1自動計算</div>
+        <input type="text" id="e2_3" readonly>
+      </div>
+      <div class="field">
+        <label>2-4. 電費帳單－非夏季天數 / 占比</label>
+        <div class="hint">依據2-1自動計算</div>
+        <input type="text" id="e2_4" readonly>
+      </div>
+      <div class="field">
+        <label>2-5. 電費帳單－總用電度數</label>
+        <div class="hint">請查看帳單「經常度數」後手動輸入</div>
+        <input type="number" step="0.01" id="e2_5">
+      </div>
+      <div class="field">
+        <label>2-6. 電費帳單－補收(退)金額（含停電扣減）</label>
+        <div class="hint">請查看帳單「補收(退)金額(含停電扣減)」後手動輸入</div>
+        <input type="number" step="0.01" id="e2_6">
+      </div>
+      <div class="field">
+        <label>2-7. 電費帳單－節電獎勵</label>
+        <div class="hint">請查看帳單「節電獎勵」後手動輸入</div>
+        <input type="number" step="0.01" id="e2_7">
+      </div>
+      <div class="field">
+        <label>2-8. 電費帳單－照片</label>
+        <div class="hint">請上傳本期「電費帳單」</div>
+        <input type="file" accept="image/*" id="file_e2_8" hidden>
+        <div class="photo-box" id="box_e2_8">
+          <span class="photo-placeholder">請上傳電費帳單...</span>
+          <img class="photo-preview" id="img_e2_8">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="num">3</span>七樓電表</h3>
+      <div class="field">
+        <label>3-1. 七樓－電表抄表日期</label>
+        <div class="hint">請依據「拍攝日期」手動輸入</div>
+        <input type="date" id="e3_1">
+      </div>
+      <div class="field">
+        <label>3-2. 七樓－上期電表度數</label>
+        <div class="hint">請查看「上期拍攝之電表度數」手動輸入</div>
+        <input type="number" step="0.01" id="e3_2">
+      </div>
+      <div class="field">
+        <label>3-3. 七樓－本期電表度數</label>
+        <div class="hint">請查看「本期拍攝之電表度數」手動輸入</div>
+        <input type="number" step="0.01" id="e3_3">
+      </div>
+      <div class="field">
+        <label>3-4. 七樓－本期用電度數</label>
+        <div class="hint">依據3-3與3-2自動計算</div>
+        <input type="text" id="e3_4" readonly>
+      </div>
+      <div class="field">
+        <label>3-5. 七樓－電表照片</label>
+        <div class="hint">請上傳本次拍攝的「電表照片」</div>
+        <input type="file" accept="image/*" id="file_e3_5" hidden>
+        <div class="photo-box" id="box_e3_5">
+          <span class="photo-placeholder">請上傳七樓電表照片...</span>
+          <img class="photo-preview" id="img_e3_5">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="num">4</span>七樓電費</h3>
+      <div class="field">
+        <label>4-1. 七樓－流動電費</label>
+        <div class="hint">依夏季／非夏季天數占比，套用住宅用累進電價自動計算</div>
+        <input type="text" id="e4_1" readonly>
+        <table class="tier-table">
+          <thead><tr><th>級距</th><th>非夏月</th><th>夏月</th><th>小計</th></tr></thead>
+          <tbody id="tier_table_body"></tbody>
+        </table>
+      </div>
+      <div class="field">
+        <label>4-2. 七樓－公共設施電費</label>
+        <div class="hint">無須分攤</div>
+        <input type="text" id="e4_2" readonly value="0.00">
+      </div>
+      <div class="field">
+        <label>4-3. 七樓－補收(退)金額（含停電扣減）</label>
+        <div class="hint">依據2-6、3-4、2-5自動計算</div>
+        <input type="text" id="e4_3" readonly>
+      </div>
+      <div class="field">
+        <label>4-4. 七樓－節電獎勵</label>
+        <div class="hint">依據2-7、3-4、2-5自動計算</div>
+        <input type="text" id="e4_4" readonly>
+      </div>
+      <div class="field">
+        <label>4-5. 七樓－本期電費</label>
+        <div class="hint">依據4-1、4-3、4-4自動計算</div>
+        <input type="text" id="e4_5" readonly>
+        <div class="formula-line" id="e4_5_formula"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 水費 ================= -->
+  <section class="sec-water">
+    <h2 class="section-title"><span class="dial">水</span>水費</h2>
+
+    <div class="card">
+      <h3><span class="num">5</span>水費帳單資訊</h3>
+      <div class="field">
+        <label>5-1. 水費帳單－用水計算期間</label>
+        <div class="hint">請查看帳單「用水計費期間」後手動輸入</div>
+        <div class="date-range">
+          <input type="date" id="e5_1_start"><span>至</span><input type="date" id="e5_1_end">
+        </div>
+      </div>
+      <div class="field">
+        <label>5-2. 水費帳單－總天數</label>
+        <div class="hint">依據5-1自動計算</div>
+        <input type="text" id="e5_2" readonly>
+      </div>
+      <div class="field">
+        <label>5-3. 水費帳單－本期用水度數</label>
+        <div class="hint">請查看帳單「本期用水度數」後手動輸入</div>
+        <input type="number" step="0.01" id="e5_3">
+      </div>
+      <div class="field">
+        <label>5-4. 水費帳單－基本費</label>
+        <div class="hint">請查看帳單「基本費」後手動輸入</div>
+        <input type="number" step="0.01" id="e5_4">
+      </div>
+      <div class="field">
+        <label>5-5. 水費帳單－用水費</label>
+        <div class="hint">請查看帳單「用水費」後手動輸入</div>
+        <input type="number" step="0.01" id="e5_5">
+      </div>
+      <div class="field">
+        <label>5-6. 水費帳單－代徵費</label>
+        <div class="hint">請查看帳單「代徵費」後手動輸入</div>
+        <input type="number" step="0.01" id="e5_6">
+      </div>
+      <div class="field">
+        <label>5-7. 水費帳單－照片</label>
+        <div class="hint">請上傳本期「水費帳單」</div>
+        <input type="file" accept="image/*" id="file_e5_7" hidden>
+        <div class="photo-box" id="box_e5_7">
+          <span class="photo-placeholder">請上傳水費帳單...</span>
+          <img class="photo-preview" id="img_e5_7">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="num">6</span>七樓水表</h3>
+      <div class="field">
+        <label>6-1. 七樓－水表抄表日期</label>
+        <div class="hint">請依據「拍攝日期」手動輸入</div>
+        <input type="date" id="e6_1">
+      </div>
+      <div class="field">
+        <label>6-2. 七樓－上期水表度數</label>
+        <div class="hint">請查看「上期拍攝之水表度數」手動輸入</div>
+        <input type="number" step="0.01" id="e6_2">
+      </div>
+      <div class="field">
+        <label>6-3. 七樓－本期水表度數</label>
+        <div class="hint">請查看「本期拍攝之水表度數」手動輸入</div>
+        <input type="number" step="0.01" id="e6_3">
+      </div>
+      <div class="field">
+        <label>6-4. 七樓－本期用水度數</label>
+        <div class="hint">依據6-3與6-2自動計算</div>
+        <input type="text" id="e6_4" readonly>
+      </div>
+      <div class="field">
+        <label>6-5. 七樓－水表照片</label>
+        <div class="hint">請上傳本次拍攝的「水表照片」</div>
+        <input type="file" accept="image/*" id="file_e6_5" hidden>
+        <div class="photo-box" id="box_e6_5">
+          <span class="photo-placeholder">請上傳七樓水表照片...</span>
+          <img class="photo-preview" id="img_e6_5">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="num">7</span>七樓水費</h3>
+      <div class="field">
+        <label>7-1. 七樓－基本費</label>
+        <div class="hint">依據5-4的一半自動計算</div>
+        <input type="text" id="e7_1" readonly>
+      </div>
+      <div class="field">
+        <label>7-2. 七樓－用水費</label>
+        <div class="hint">依據5-5、6-4、5-3自動計算</div>
+        <input type="text" id="e7_2" readonly>
+      </div>
+      <div class="field">
+        <label>7-3. 七樓－代徵費</label>
+        <div class="hint">依據5-6、6-4、5-3自動計算</div>
+        <input type="text" id="e7_3" readonly>
+      </div>
+      <div class="field">
+        <label>7-4. 七樓－本期水費</label>
+        <div class="hint">依據7-1、7-2、7-3自動計算</div>
+        <input type="text" id="e7_4" readonly>
+        <div class="formula-line" id="e7_4_formula"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 加總 ================= -->
+  <section class="sec-total">
+    <h2 class="section-title"><span class="dial">總</span>七樓電費與水費加總</h2>
+    <div class="card">
+      <h3><span class="num">8</span><span id="periodLabel">YYYY年XX月～YYYY年XX月</span> 七樓－電費與水費</h3>
+      <div class="formula-line">依據4-5、7-4自動計算</div>
+      <div class="grand-total">
+        <div class="amount" id="e8_total">$ 0.00</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="actions">
+    <button class="excel" id="btnExcel">EXCEL</button>
+    <button class="pdf" id="btnPdf">PDF</button>
+    <button class="line" id="btnLine">LINE</button>
+  </div>
+
+  <div class="footnote">
+    2026/07/20製作
+    <!-- ＊各項金額自動計算並四捨五入至小數點第2位；最後「七樓電費與水費加總」四捨五入至整數（不顯示小數點）。所有負數欄位一律以紅字顯示。夏季天數依每年6月1日至9月30日認定，非夏季為其餘日期。PDF與LINE分享內容皆以正體中文顯示。 -->
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+/* ============ 電價表預設值（住宅用累進費率，請依台電最新公告手動核對修改）============ */
+const priceTiers = [
+  {label:'120度以下部分',   labelEn:'Tier 1 (0-120 kWh)',     min:0,    max:120,  ns:1.78, s:1.78},
+  {label:'121~330度部分',   labelEn:'Tier 2 (121-330 kWh)',   min:120,  max:330,  ns:2.26, s:2.55},
+  {label:'331~500度部分',   labelEn:'Tier 3 (331-500 kWh)',   min:330,  max:500,  ns:3.13, s:3.80},
+  {label:'501~700度部分',   labelEn:'Tier 4 (501-700 kWh)',   min:500,  max:700,  ns:4.24, s:5.14},
+  {label:'701~1000度部分',  labelEn:'Tier 5 (701-1000 kWh)',  min:700,  max:1000, ns:5.27, s:6.44},
+  {label:'1001度以上部分',  labelEn:'Tier 6 (1001+ kWh)',     min:1000, max:Infinity, ns:7.03, s:8.86},
+];
+
+const photos = { e2_8:null, e3_5:null, e5_7:null, e6_5:null };
+
+function round2(x){ return Math.round((x + Number.EPSILON) * 100) / 100; }
+function getVal(id){ const v = parseFloat(document.getElementById(id).value); return isNaN(v)?0:v; }
+function setText(id, text, neg){
+  const el = document.getElementById(id);
+  el.value = text;
+  el.classList.toggle('negative', !!neg);
+}
+function fmt(n){ return n.toFixed(2); }
+function fmtInt(n){ return Math.round(n).toString(); }
+
+/* 任意可編輯數字欄位：輸入負數時顯示紅字 */
+function markNegative(el){
+  const v = parseFloat(el.value);
+  el.classList.toggle('negative', !isNaN(v) && v < 0);
+}
+function bindNegativeHighlight(){
+  document.querySelectorAll('input[type=number]').forEach(el=>{
+    markNegative(el);
+    el.addEventListener('input', ()=> markNegative(el));
+  });
+}
+
+function pad2(n){ return String(n).padStart(2,'0'); }
+function englishPeriodLabel(){
+  const s = document.getElementById('e2_1_start').value;
+  const e = document.getElementById('e2_1_end').value;
+  if(!s || !e) return 'YYYY/MM ~ YYYY/MM';
+  const sd = new Date(s), ed = new Date(e);
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${months[sd.getMonth()]} ${sd.getFullYear()} ~ ${months[ed.getMonth()]} ${ed.getFullYear()}`;
+}
+/* 下載/分享檔名：yyyy年mm月~yyyy年mm月七樓電費與水費 */
+function reportFileNameBase(){
+  const s = document.getElementById('e2_1_start').value;
+  const e = document.getElementById('e2_1_end').value;
+  if(!s || !e) return '七樓電費與水費計算表';
+  const sd = new Date(s), ed = new Date(e);
+  return `${sd.getFullYear()}年${pad2(sd.getMonth()+1)}月~${ed.getFullYear()}年${pad2(ed.getMonth()+1)}月七樓電費與水費`;
+}
+
+/* ============ 建立電價表輸入列 ============ */
+function buildPriceTable(){
+  const container = document.getElementById('priceTableRows');
+  container.innerHTML = priceTiers.map((t,i)=>`
+    <div class="price-table-row">
+      <label>${t.label}</label>
+      <input type="number" step="0.01" id="tier_ns_${i}" value="${t.ns}">
+      <input type="number" step="0.01" id="tier_s_${i}" value="${t.s}">
+    </div>`).join('');
+}
+
+/* ============ 日期輔助函式 ============ */
+function daysBetweenInclusive(start, end){
+  return Math.round((end - start) / 86400000) + 1;
+}
+function summerOverlapDays(start, end){
+  let total = 0;
+  for(let y = start.getFullYear() - 1; y <= end.getFullYear() + 1; y++){
+    const sStart = new Date(y, 5, 1);
+    const sEnd = new Date(y, 8, 30);
+    const oStart = start > sStart ? start : sStart;
+    const oEnd = end < sEnd ? end : sEnd;
+    if(oStart <= oEnd){ total += daysBetweenInclusive(oStart, oEnd); }
+  }
+  return total;
+}
+function periodLabel(){
+  const s = document.getElementById('e2_1_start').value;
+  const e = document.getElementById('e2_1_end').value;
+  if(!s || !e) return 'YYYY年XX月～YYYY年XX月';
+  const sd = new Date(s), ed = new Date(e);
+  return `${sd.getFullYear()}年${sd.getMonth()+1}月～${ed.getFullYear()}年${ed.getMonth()+1}月`;
+}
+
+/* ============ 全部重新計算 ============ */
+let lastTierRows = [];
+
+function recalcAll(){
+  /* --- 2. 電費帳單天數 / 占比 --- */
+  const s1 = document.getElementById('e2_1_start').value;
+  const e1 = document.getElementById('e2_1_end').value;
+  let totalDays = 0, summerDays = 0, nonSummerDays = 0, summerPct = 0, nonSummerPct = 0;
+  if(s1 && e1){
+    const start = new Date(s1), end = new Date(e1);
+    if(end >= start){
+      totalDays = daysBetweenInclusive(start, end);
+      summerDays = summerOverlapDays(start, end);
+      nonSummerDays = totalDays - summerDays;
+      summerPct = totalDays ? summerDays / totalDays : 0;
+      nonSummerPct = totalDays ? nonSummerDays / totalDays : 0;
+    }
+  }
+  setText('e2_2', totalDays ? totalDays + ' 天' : '');
+  setText('e2_3', totalDays ? summerDays + ' 天 / ' + (summerPct*100).toFixed(1) + '%' : '');
+  setText('e2_4', totalDays ? nonSummerDays + ' 天 / ' + (nonSummerPct*100).toFixed(1) + '%' : '');
+
+  /* --- 3. 七樓電表 --- */
+  const usage3_4 = getVal('e3_3') - getVal('e3_2');
+  setText('e3_4', fmt(usage3_4) + ' 度', usage3_4 < 0);
+
+  /* --- 4-1. 累進電價分攤試算 --- */
+  let remaining = Math.max(usage3_4, 0);
+  let rows = [];
+  let total4_1 = 0;
+  priceTiers.forEach((tier, i)=>{
+    const ns = getVal('tier_ns_'+i);
+    const s = getVal('tier_s_'+i);
+    let bracket;
+    if(tier.max === Infinity){ bracket = remaining; }
+    else { bracket = Math.max(Math.min(remaining, tier.max - tier.min), 0); }
+    remaining -= bracket;
+    const nsKwh = bracket * nonSummerPct;
+    const sKwh = bracket * summerPct;
+    const nsCost = round2(nsKwh * ns);
+    const sCost = round2(sKwh * s);
+    const subtotal = round2(nsCost + sCost);
+    total4_1 = round2(total4_1 + subtotal);
+    rows.push({label:tier.label, nsKwh, ns, nsCost, sKwh, s, sCost, subtotal});
+  });
+  lastTierRows = rows;
+  document.getElementById('tier_table_body').innerHTML = rows.map(r=>`
+    <tr>
+      <td>${r.label}</td>
+      <td class="${r.nsCost<0?'negative':''}">${r.nsKwh.toFixed(2)}度×${r.ns}=${fmt(r.nsCost)}</td>
+      <td class="${r.sCost<0?'negative':''}">${r.sKwh.toFixed(2)}度×${r.s}=${fmt(r.sCost)}</td>
+      <td class="${r.subtotal<0?'negative':''}">${fmt(r.subtotal)}</td>
+    </tr>`).join('');
+  setText('e4_1', fmt(total4_1) + ' 元', total4_1 < 0);
+
+  /* --- 4-2 ~ 4-5 --- */
+  const usage2_5 = getVal('e2_5');
+  const e4_3 = usage2_5 ? round2(getVal('e2_6') * usage3_4 / usage2_5) : 0;
+  const e4_4 = usage2_5 ? round2(getVal('e2_7') * usage3_4 / usage2_5) : 0;
+  setText('e4_3', fmt(e4_3) + ' 元', e4_3 < 0);
+  setText('e4_4', fmt(e4_4) + ' 元', e4_4 < 0);
+  const e4_5 = round2(total4_1 + e4_3 + e4_4);
+  setText('e4_5', fmt(e4_5) + ' 元', e4_5 < 0);
+  document.getElementById('e4_5_formula').textContent =
+    `計算內容：${fmt(total4_1)} + ${fmt(e4_3)} + ${fmt(e4_4)} = ${fmt(e4_5)}`;
+
+  /* --- 5. 水費帳單天數 --- */
+  const ws1 = document.getElementById('e5_1_start').value;
+  const we1 = document.getElementById('e5_1_end').value;
+  let wTotalDays = 0;
+  if(ws1 && we1){
+    const start = new Date(ws1), end = new Date(we1);
+    if(end >= start){ wTotalDays = daysBetweenInclusive(start, end); }
+  }
+  setText('e5_2', wTotalDays ? wTotalDays + ' 天' : '');
+
+  /* --- 6. 七樓水表 --- */
+  const usage6_4 = getVal('e6_3') - getVal('e6_2');
+  setText('e6_4', fmt(usage6_4) + ' 度', usage6_4 < 0);
+
+  /* --- 7. 七樓水費 --- */
+  const usage5_3 = getVal('e5_3');
+  const e7_1 = round2(getVal('e5_4') / 2);
+  const e7_2 = usage5_3 ? round2(getVal('e5_5') * usage6_4 / usage5_3) : 0;
+  const e7_3 = usage5_3 ? round2(getVal('e5_6') * usage6_4 / usage5_3) : 0;
+  setText('e7_1', fmt(e7_1) + ' 元', e7_1 < 0);
+  setText('e7_2', fmt(e7_2) + ' 元', e7_2 < 0);
+  setText('e7_3', fmt(e7_3) + ' 元', e7_3 < 0);
+  const e7_4 = round2(e7_1 + e7_2 + e7_3);
+  setText('e7_4', fmt(e7_4) + ' 元', e7_4 < 0);
+  document.getElementById('e7_4_formula').textContent =
+    `計算內容：${fmt(e7_1)} + ${fmt(e7_2)} + ${fmt(e7_3)} = ${fmt(e7_4)}`;
+
+  /* --- 8. 加總（四捨五入至整數，不顯示小數點）--- */
+  const total8 = round2(e4_5 + e7_4);
+  const total8Int = Math.round(total8);
+  document.getElementById('periodLabel').textContent = periodLabel();
+  const totalEl = document.getElementById('e8_total');
+  totalEl.textContent = '$ ' + fmtInt(total8Int);
+  totalEl.style.color = total8Int < 0 ? 'var(--neg)' : '';
+}
+
+/* ============ 綁定所有輸入欄位 ============ */
+function bindInputs(){
+  document.querySelectorAll('input[type=number], input[type=date]').forEach(el=>{
+    el.addEventListener('input', recalcAll);
+    el.addEventListener('change', recalcAll);
+  });
+  bindNegativeHighlight();
+}
+
+/* ============ 照片上傳 ============ */
+function setupPhotoUpload(key){
+  const box = document.getElementById('box_'+key);
+  const input = document.getElementById('file_'+key);
+  const img = document.getElementById('img_'+key);
+  const placeholder = box.querySelector('.photo-placeholder');
+  box.addEventListener('click', ()=> input.click());
+  input.addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev)=>{
+      const dataUrl = ev.target.result;
+      img.src = dataUrl;
+      img.style.display = 'block';
+      placeholder.style.display = 'none';
+      const tmp = new Image();
+      tmp.onload = ()=>{
+        photos[key] = { dataUrl, w: tmp.naturalWidth, h: tmp.naturalHeight };
+      };
+      tmp.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ============ 嘗試抓取台電開放資料（僅供比對，不自動覆蓋欄位）============ */
+async function tryFetchTaipowerData(){
+  const el = document.getElementById('apiRawData');
+  try{
+    const res = await fetch('https://service.taipower.com.tw/data/opendata/apply/file/d007008/001.json');
+    const data = await res.json();
+    el.textContent = JSON.stringify(data, null, 2).slice(0, 4000);
+  }catch(err){
+    el.textContent = '無法自動取得資料（可能因瀏覽器跨網域限制），請點擊上方連結至台電網站手動核對電價：\n' + err;
+  }
+}
+
+// /* ============ EXCEL 匯出 ============ */
+// function cmToPx(cm){ return cm / 2.54 * 96; }
+
+// async function addImageRow(wb, ws, rState, key, label){
+//   ws.getRow(rState.r).getCell(1).value = label;
+//   rState.r++;
+//   const p = photos[key];
+//   if(p){
+//     const widthPx = cmToPx(5);
+//     const heightPx = widthPx * (p.h / p.w);
+//     const isPng = p.dataUrl.indexOf('image/png') !== -1;
+//     const imgId = wb.addImage({ base64: p.dataUrl, extension: isPng ? 'png' : 'jpeg' });
+//     ws.addImage(imgId, { tl:{ col:0, row: rState.r - 1 }, ext:{ width: widthPx, height: heightPx } });
+//     const rowsNeeded = Math.max(Math.ceil(heightPx / 20), 1) + 1;
+//     rState.r += rowsNeeded;
+//   } else {
+//     ws.getRow(rState.r).getCell(1).value = '(尚未上傳)';
+//     rState.r += 2;
+//   }
+// }
+
+// function getHint(id){
+
+//     const el = document.getElementById(id);
+//     if(!el) return '';
+//     const field = el.closest('.field');
+//     if(!field) return '';
+//     const hint = field.querySelector('.hint');
+//     return hint ? hint.textContent.trim() : '';
+// }
+
+// async function exportExcel(){
+//   const wb = new ExcelJS.Workbook();
+//   const ws = wb.addWorksheet('七樓電費水費');
+//   ws.columns = [
+//     {width:32},
+//     {width:45},
+//     {width:25}
+//   ];
+//   const rState = { r: 1 };
+//   const addRow = (cells)=>{
+//     ws.getRow(rState.r).values = cells;
+//     rState.r++;
+// };
+
+//   addRow(['七樓電費與水費計算表']); rState.r++;
+
+//   addRow(['電費']);
+//   addRow(['1. 目前電價表(住宅用)']);
+//   addRow(['級距','非夏月電價','夏月電價']);
+//   priceTiers.forEach((t,i)=> addRow([t.label, getVal('tier_ns_'+i), getVal('tier_s_'+i)]));
+//   rState.r++;
+
+//   addRow(['2. 電費帳單資訊']);
+//   addRow([
+// '2-1 電費帳單－計算期間',
+// getHint('e2_1_start'),
+// (document.getElementById('e2_1_start').value||'') 
+// + ' 至 ' +
+// (document.getElementById('e2_1_end').value||'')
+// ]);
+//   addRow([
+// '2-2 電費帳單－總天數',
+// getHint('e2_2'),
+// document.getElementById('e2_2').value
+// ]);
+//   addRow(['2-3 夏季天數/占比', document.getElementById('e2_3').value]);
+//   addRow(['2-4 非夏季天數/占比', document.getElementById('e2_4').value]);
+//   addRow(['2-5 總用電度數', getVal('e2_5')]);
+//   addRow(['2-6 補收(退)金額(含停電扣減)', getVal('e2_6')]);
+//   addRow(['2-7 節電獎勵', getVal('e2_7')]);
+//   await addImageRow(wb, ws, rState, 'e2_8', '2-8 電費帳單照片');
+
+//   addRow(['3. 七樓電表']);
+//   addRow(['3-1 抄表日期', document.getElementById('e3_1').value]);
+//   addRow(['3-2 上期電表度數', getVal('e3_2')]);
+//   addRow(['3-3 本期電表度數', getVal('e3_3')]);
+//   addRow(['3-4 本期用電度數', document.getElementById('e3_4').value]);
+//   await addImageRow(wb, ws, rState, 'e3_5', '3-5 七樓電表照片');
+
+//   addRow(['4. 七樓電費']);
+//   addRow(['4-1 流動電費', document.getElementById('e4_1').value]);
+//   addRow(['級距','非夏月','夏月','小計']);
+//   lastTierRows.forEach(r=> addRow([r.label, `${r.nsKwh.toFixed(2)}度×${r.ns}=${fmt(r.nsCost)}`, `${r.sKwh.toFixed(2)}度×${r.s}=${fmt(r.sCost)}`, fmt(r.subtotal)]));
+//   addRow(['4-2 公共設施電費', document.getElementById('e4_2').value]);
+//   addRow(['4-3 補收(退)金額', document.getElementById('e4_3').value]);
+//   addRow(['4-4 節電獎勵', document.getElementById('e4_4').value]);
+//   addRow(['4-5 本期電費', document.getElementById('e4_5').value]);
+//   addRow([document.getElementById('e4_5_formula').textContent]);
+//   rState.r++;
+
+//   addRow(['水費']);
+//   addRow(['5. 水費帳單資訊']);
+//   addRow(['5-1 用水計算期間', (document.getElementById('e5_1_start').value||'') + ' 至 ' + (document.getElementById('e5_1_end').value||'')]);
+//   addRow(['5-2 總天數', document.getElementById('e5_2').value]);
+//   addRow(['5-3 本期用水度數', getVal('e5_3')]);
+//   addRow(['5-4 基本費', getVal('e5_4')]);
+//   addRow(['5-5 用水費', getVal('e5_5')]);
+//   addRow(['5-6 代徵費', getVal('e5_6')]);
+//   await addImageRow(wb, ws, rState, 'e5_7', '5-7 水費帳單照片');
+
+//   addRow(['6. 七樓水表']);
+//   addRow(['6-1 抄表日期', document.getElementById('e6_1').value]);
+//   addRow(['6-2 上期水表度數', getVal('e6_2')]);
+//   addRow(['6-3 本期水表度數', getVal('e6_3')]);
+//   addRow(['6-4 本期用水度數', document.getElementById('e6_4').value]);
+//   await addImageRow(wb, ws, rState, 'e6_5', '6-5 七樓水表照片');
+
+//   addRow(['7. 七樓水費']);
+//   addRow(['7-1 基本費', document.getElementById('e7_1').value]);
+//   addRow(['7-2 用水費', document.getElementById('e7_2').value]);
+//   addRow(['7-3 代徵費', document.getElementById('e7_3').value]);
+//   addRow(['7-4 本期水費', document.getElementById('e7_4').value]);
+//   addRow([document.getElementById('e7_4_formula').textContent]);
+//   rState.r++;
+
+//   addRow(['七樓電費與水費加總']);
+//   addRow(['8. ' + document.getElementById('periodLabel').textContent + ' 七樓-電費與水費', document.getElementById('e8_total').textContent]);
+
+//   const buf = await wb.xlsx.writeBuffer();
+//   downloadBlob(buf, reportFileNameBase() + '.xlsx', 'application/octet-stream');
+// }
+
+
+
+
+/* ============ EXCEL 匯出 ============ */
+
+function cmToPx(cm){
+    return cm / 2.54 * 96;
+}
+
+/* 取得 hint */
+function getHint(id){
+
+    const el = document.getElementById(id);
+
+    if(!el) return '';
+
+    const field = el.closest('.field');
+
+    if(!field) return '';
+
+    const hint = field.querySelector('.hint');
+
+    return hint ? hint.textContent.trim() : '';
+}
+
+/*
+    一般欄位輸出
+    title = 項目名稱
+    id = input id
+*/
+function addFieldRow(addRow,title,id,value){
+
+    addRow([
+        title,
+        getHint(id),
+        value ?? ''
+    ]);
+
+}
+
+/* 圖片輸出 */
+async function addImageRow(
+    wb,
+    ws,
+    rState,
+    key,
+    label,
+    hintId
+){
+
+    ws.getRow(rState.r).values = [
+        label,
+        getHint(hintId),
+        ''
+    ];
+
+
+    const imageRow = rState.r - 1;
+
+    rState.r++;
+
+
+    const p = photos[key];
+
+
+    if(p){
+
+        const widthPx = cmToPx(5);
+
+        const heightPx =
+            widthPx * (p.h / p.w);
+
+
+        const isPng =
+            p.dataUrl.indexOf('image/png') !== -1;
+
+
+        const imgId = wb.addImage({
+
+            base64:p.dataUrl,
+
+            extension:
+            isPng ? 'png':'jpeg'
+
+        });
+
+
+
+        ws.addImage(imgId,{
+
+            tl:{
+                col:2,
+                row:imageRow
+            },
+
+            ext:{
+                width:widthPx,
+                height:heightPx
+            }
+
+        });
+
+
+        const rowsNeeded =
+            Math.max(
+                Math.ceil(heightPx / 20),
+                1
+            ) + 1;
+
+
+        rState.r += rowsNeeded;
+
+
+    }else{
+
+
+        ws.getRow(rState.r).values=[
+            '',
+            '',
+            '(尚未上傳)'
+        ];
+
+
+        rState.r +=2;
+
+    }
+
+}
+
+async function exportExcel(){
+
+const wb = new ExcelJS.Workbook();
+
+const ws = wb.addWorksheet('七樓電費水費');
+
+
+ws.columns = [
+    {width:35},
+    {width:45},
+    {width:30}
+];
+
+
+const rState = { r:1 };
+
+
+const addRow = (cells)=>{
+
+    ws.getRow(rState.r).values = cells;
+
+    ws.getRow(rState.r).alignment = {
+        vertical:'top',
+        wrapText:true
+    };
+
+    rState.r++;
+
+};
+
+
+
+/* 標題 */
+addRow([
+    '七樓電費與水費計算表'
+]);
+
+rState.r++;
+
+
+
+/* ================= 電費 ================= */
+
+
+addRow([
+    '電費'
+]);
+
+
+addRow([
+    '1. 目前電價表(住宅用)'
+]);
+
+
+addRow([
+    '級距',
+    '非夏月電價',
+    '夏月電價'
+]);
+
+
+priceTiers.forEach((t,i)=>{
+
+    addRow([
+        t.label,
+        getVal('tier_ns_'+i),
+        getVal('tier_s_'+i)
+    ]);
+
+});
+
+
+rState.r++;
+
+
+
+/* ================= 2 電費帳單 ================= */
+
+
+addRow([
+    '2. 電費帳單資訊'
+]);
+
+
+
+addFieldRow(
+    addRow,
+    '2-1 電費帳單－計算期間',
+    'e2_1_start',
+    (
+        document.getElementById('e2_1_start').value || ''
+    )
+    +
+    ' 至 '
+    +
+    (
+        document.getElementById('e2_1_end').value || ''
+    )
+);
+
+
+
+addFieldRow(
+    addRow,
+    '2-2 電費帳單－總天數',
+    'e2_2',
+    document.getElementById('e2_2').value
+);
+
+
+
+addFieldRow(
+    addRow,
+    '2-3 電費帳單－夏季天數 / 占比',
+    'e2_3',
+    document.getElementById('e2_3').value
+);
+
+
+
+addFieldRow(
+    addRow,
+    '2-4 電費帳單－非夏季天數 / 占比',
+    'e2_4',
+    document.getElementById('e2_4').value
+);
+
+
+
+addFieldRow(
+    addRow,
+    '2-5 電費帳單－總用電度數',
+    'e2_5',
+    getVal('e2_5')
+);
+
+
+
+addFieldRow(
+    addRow,
+    '2-6 電費帳單－補收(退)金額(含停電扣減)',
+    'e2_6',
+    getVal('e2_6')
+);
+
+
+
+addFieldRow(
+    addRow,
+    '2-7 電費帳單－節電獎勵',
+    'e2_7',
+    getVal('e2_7')
+);
+
+
+
+await addImageRow(
+    wb,
+    ws,
+    rState,
+    'e2_8',
+    '2-8 電費帳單照片',
+    'file_e2_8'
+);
+
+
+
+
+
+/* ================= 3 電表 ================= */
+
+
+addRow([
+    '3. 七樓電表'
+]);
+
+
+
+addFieldRow(
+    addRow,
+    '3-1 七樓－電表抄表日期',
+    'e3_1',
+    document.getElementById('e3_1').value
+);
+
+
+
+addFieldRow(
+    addRow,
+    '3-2 七樓－上期電表度數',
+    'e3_2',
+    getVal('e3_2')
+);
+
+
+
+addFieldRow(
+    addRow,
+    '3-3 七樓－本期電表度數',
+    'e3_3',
+    getVal('e3_3')
+);
+
+
+
+addFieldRow(
+    addRow,
+    '3-4 七樓－本期用電度數',
+    'e3_4',
+    document.getElementById('e3_4').value
+);
+
+
+
+await addImageRow(
+    wb,
+    ws,
+    rState,
+    'e3_5',
+    '3-5 七樓電表照片',
+    'file_e3_5'
+);
+
+
+
+
+
+/* ================= 4 七樓電費 ================= */
+
+
+addRow([
+    '4. 七樓電費'
+]);
+
+
+
+addFieldRow(
+    addRow,
+    '4-1 七樓－流動電費',
+    'e4_1',
+    document.getElementById('e4_1').value
+);
+
+
+
+addRow([
+    '級距',
+    '非夏月',
+    '夏月'
+]);
+
+
+
+lastTierRows.forEach(r=>{
+
+    addRow([
+
+        r.label,
+
+        `${r.nsKwh.toFixed(2)}度 × ${r.ns} = ${fmt(r.nsCost)}`,
+
+        `${r.sKwh.toFixed(2)}度 × ${r.s} = ${fmt(r.sCost)}`
+
+    ]);
+
+});
+
+
+
+addFieldRow(
+    addRow,
+    '4-2 七樓－公共設施電費',
+    'e4_2',
+    document.getElementById('e4_2').value
+);
+
+
+
+addFieldRow(
+    addRow,
+    '4-3 七樓－補收(退)金額',
+    'e4_3',
+    document.getElementById('e4_3').value
+);
+
+
+
+addFieldRow(
+    addRow,
+    '4-4 七樓－節電獎勵',
+    'e4_4',
+    document.getElementById('e4_4').value
+);
+
+
+
+addFieldRow(
+    addRow,
+    '4-5 七樓－本期電費',
+    'e4_5',
+    document.getElementById('e4_5').value
+);
+
+
+
+addRow([
+    '',
+    '',
+    document.getElementById('e4_5_formula').textContent
+]);
+
+
+
+rState.r++;
+
+
+
+
+
+/* ================= 水費 ================= */
+
+
+addRow([
+    '水費'
+]);
+
+
+
+addRow([
+    '5. 水費帳單資訊'
+]);
+
+
+
+addFieldRow(
+    addRow,
+    '5-1 水費帳單－用水計算期間',
+    'e5_1_start',
+    (
+        document.getElementById('e5_1_start').value || ''
+    )
+    +
+    ' 至 '
+    +
+    (
+        document.getElementById('e5_1_end').value || ''
+    )
+);
+
+
+
+addFieldRow(
+    addRow,
+    '5-2 水費帳單－總天數',
+    'e5_2',
+    document.getElementById('e5_2').value
+);
+
+
+
+addFieldRow(
+    addRow,
+    '5-3 水費帳單－本期用水度數',
+    'e5_3',
+    getVal('e5_3')
+);
+
+
+
+addFieldRow(
+    addRow,
+    '5-4 水費帳單－基本費',
+    'e5_4',
+    getVal('e5_4')
+);
+
+
+
+addFieldRow(
+    addRow,
+    '5-5 水費帳單－用水費',
+    'e5_5',
+    getVal('e5_5')
+);
+
+
+
+addFieldRow(
+    addRow,
+    '5-6 水費帳單－代徵費',
+    'e5_6',
+    getVal('e5_6')
+);
+
+
+
+await addImageRow(
+    wb,
+    ws,
+    rState,
+    'e5_7',
+    '5-7 水費帳單照片',
+    'file_e5_7'
+);
+
+
+
+
+/* ================= 6 水表 ================= */
+
+
+addRow([
+    '6. 七樓水表'
+]);
+
+
+
+addFieldRow(
+    addRow,
+    '6-1 七樓－水表抄表日期',
+    'e6_1',
+    document.getElementById('e6_1').value
+);
+
+
+
+addFieldRow(
+    addRow,
+    '6-2 七樓－上期水表度數',
+    'e6_2',
+    getVal('e6_2')
+);
+
+
+
+addFieldRow(
+    addRow,
+    '6-3 七樓－本期水表度數',
+    'e6_3',
+    getVal('e6_3')
+);
+
+
+
+addFieldRow(
+    addRow,
+    '6-4 七樓－本期用水度數',
+    'e6_4',
+    document.getElementById('e6_4').value
+);
+
+
+
+await addImageRow(
+    wb,
+    ws,
+    rState,
+    'e6_5',
+    '6-5 七樓水表照片',
+    'file_e6_5'
+);
+
+
+
+
+
+/* ================= 7 水費 ================= */
+
+
+addRow([
+    '7. 七樓水費'
+]);
+
+
+
+addFieldRow(
+    addRow,
+    '7-1 七樓－基本費',
+    'e7_1',
+    document.getElementById('e7_1').value
+);
+
+
+
+addFieldRow(
+    addRow,
+    '7-2 七樓－用水費',
+    'e7_2',
+    document.getElementById('e7_2').value
+);
+
+
+
+addFieldRow(
+    addRow,
+    '7-3 七樓－代徵費',
+    'e7_3',
+    document.getElementById('e7_3').value
+);
+
+
+
+addFieldRow(
+    addRow,
+    '7-4 七樓－本期水費',
+    'e7_4',
+    document.getElementById('e7_4').value
+);
+
+
+
+addRow([
+    '',
+    '',
+    document.getElementById('e7_4_formula').textContent
+]);
+
+
+
+rState.r++;
+
+
+
+
+
+/* ================= 總計 ================= */
+
+
+addRow([
+    '七樓電費與水費加總'
+]);
+
+
+
+addRow([
+
+    '8. '+document.getElementById('periodLabel').textContent+' 七樓-電費與水費',
+
+    '',
+
+    document.getElementById('e8_total').textContent
+
+]);
+
+
+
+
+/* 格式 */
+
+ws.eachRow(row=>{
+
+    row.eachCell(cell=>{
+
+        cell.alignment={
+            vertical:'top',
+            wrapText:true
+        };
+
+    });
+
+});
+
+
+
+ws.views=[
+{
+    state:'frozen',
+    ySplit:1
+}
+];
+
+
+
+const buf = await wb.xlsx.writeBuffer();
+
+
+downloadBlob(
+    buf,
+    reportFileNameBase()+'.xlsx',
+    'application/octet-stream'
+);
+
+
+}
+
+function downloadBlob(buf, filename, mime){
+  const blob = new Blob([buf], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+
+/* ============ 共用內容（正體中文，LINE分享使用）============ */
+function totalHeaderText(){
+  const totalRaw = document.getElementById('e8_total').textContent.replace('$','').trim();
+  const totalNum = parseInt(totalRaw.replace(/,/g,''),10) || 0;
+  const totalFmt = totalNum.toLocaleString('en-US');
+  const period = periodLabel().replace(/～/g,'~');
+  return `${period}七樓電費與水費，共計：$ ${totalFmt}`;
+}
+
+function buildReportModelZh(){
+  const model = [];
+  const h = (text)=> model.push({type:'heading', text});
+  const l = (text, neg)=> model.push({type:'line', text, neg:!!neg});
+
+  const titleText = totalHeaderText();
+
+  h('電費');
+  h('2. 電費帳單資訊');
+  l('2-1 計算期間：' + (document.getElementById('e2_1_start').value||'') + ' ~ ' + (document.getElementById('e2_1_end').value||''));
+  l('2-2 總天數：' + document.getElementById('e2_2').value);
+  l('2-3 夏季天數/占比：' + document.getElementById('e2_3').value);
+  l('2-4 非夏季天數/占比：' + document.getElementById('e2_4').value);
+  l('2-5 總用電度數：' + getVal('e2_5') + ' 度');
+  l('2-6 補收(退)金額(含停電扣減)：' + fmt(getVal('e2_6')) + ' 元', getVal('e2_6')<0);
+  l('2-7 節電獎勵：' + fmt(getVal('e2_7')) + ' 元', getVal('e2_7')<0);
+
+  h('3. 七樓電表');
+  l('3-1 抄表日期：' + (document.getElementById('e3_1').value||''));
+  l('3-2 上期電表度數：' + getVal('e3_2') + ' 度');
+  l('3-3 本期電表度數：' + getVal('e3_3') + ' 度');
+  l('3-4 本期用電度數：' + document.getElementById('e3_4').value);
+
+  h('4. 七樓電費');
+  l('4-1 流動電費：' + document.getElementById('e4_1').value, parseFloat(document.getElementById('e4_1').value)<0);
+  lastTierRows.forEach((r,i)=>{
+    if(r.nsKwh<=0 && r.sKwh<=0) return;
+    l(`　${priceTiers[i].label}：${r.nsKwh.toFixed(2)}度x${r.ns}=${fmt(r.nsCost)}(非夏月) / ${r.sKwh.toFixed(2)}度x${r.s}=${fmt(r.sCost)}(夏月) / 小計 ${fmt(r.subtotal)}`, r.subtotal<0);
+  });
+  l('4-2 公共設施電費：' + document.getElementById('e4_2').value);
+  l('4-3 補收(退)金額：' + document.getElementById('e4_3').value, parseFloat(document.getElementById('e4_3').value)<0);
+  l('4-4 節電獎勵：' + document.getElementById('e4_4').value, parseFloat(document.getElementById('e4_4').value)<0);
+  l('4-5 本期電費：' + document.getElementById('e4_5').value, parseFloat(document.getElementById('e4_5').value)<0);
+  l(document.getElementById('e4_5_formula').textContent);
+
+  h('水費');
+  h('5. 水費帳單資訊');
+  l('5-1 用水計算期間：' + (document.getElementById('e5_1_start').value||'') + ' ~ ' + (document.getElementById('e5_1_end').value||''));
+  l('5-2 總天數：' + document.getElementById('e5_2').value);
+  l('5-3 本期用水度數：' + getVal('e5_3') + ' 度');
+  l('5-4 基本費：' + fmt(getVal('e5_4')) + ' 元', getVal('e5_4')<0);
+  l('5-5 用水費：' + fmt(getVal('e5_5')) + ' 元', getVal('e5_5')<0);
+  l('5-6 代徵費：' + fmt(getVal('e5_6')) + ' 元', getVal('e5_6')<0);
+
+  h('6. 七樓水表');
+  l('6-1 抄表日期：' + (document.getElementById('e6_1').value||''));
+  l('6-2 上期水表度數：' + getVal('e6_2') + ' 度');
+  l('6-3 本期水表度數：' + getVal('e6_3') + ' 度');
+  l('6-4 本期用水度數：' + document.getElementById('e6_4').value);
+
+  h('7. 七樓水費');
+  l('7-1 基本費：' + document.getElementById('e7_1').value, parseFloat(document.getElementById('e7_1').value)<0);
+  l('7-2 用水費：' + document.getElementById('e7_2').value, parseFloat(document.getElementById('e7_2').value)<0);
+  l('7-3 代徵費：' + document.getElementById('e7_3').value, parseFloat(document.getElementById('e7_3').value)<0);
+  l('7-4 本期水費：' + document.getElementById('e7_4').value, parseFloat(document.getElementById('e7_4').value)<0);
+  l(document.getElementById('e7_4_formula').textContent);
+
+  return { title: titleText, model };
+}
+
+/* ============ PDF 版面用小工具 ============ */
+function gv(id){ return document.getElementById(id).value; }
+function fieldRow(label, value, isNeg){
+  return `<div style="display:flex;justify-content:space-between;gap:8px;font-size:9.5px;line-height:1.5;padding:2px 0;border-bottom:1px dotted #ddd;">
+    <span style="color:#6B6A63;flex:none;white-space:nowrap;">${label}</span>
+    <span style="text-align:right;font-weight:600;word-break:break-all;${isNeg?'color:#e01406;':''}">${value}</span>
+  </div>`;
+}
+function subHeader(text){
+  return `<div style="font-size:11px;font-weight:700;margin:9px 0 4px;padding-bottom:3px;border-bottom:1px solid #999;">${text}</div>`;
+}
+
+function buildElectricityColumnHtml(){
+  let html = `<div style="font-size:14px;font-weight:700;color:#2196F3;margin-bottom:6px;">電費</div>`;
+  html += subHeader('2. 電費帳單資訊');
+  html += fieldRow('2-1 計算期間', (gv('e2_1_start')||'-') + ' ~ ' + (gv('e2_1_end')||'-'));
+  html += fieldRow('2-2 總天數', gv('e2_2')||'-');
+  html += fieldRow('2-3 夏季天數/占比', gv('e2_3')||'-');
+  html += fieldRow('2-4 非夏季天數/占比', gv('e2_4')||'-');
+  html += fieldRow('2-5 總用電度數', getVal('e2_5')+' 度');
+  html += fieldRow('2-6 補收(退)金額', fmt(getVal('e2_6'))+' 元', getVal('e2_6')<0);
+  html += fieldRow('2-7 節電獎勵', fmt(getVal('e2_7'))+' 元', getVal('e2_7')<0);
+
+  html += subHeader('3. 七樓電表');
+  html += fieldRow('3-1 抄表日期', gv('e3_1')||'-');
+  html += fieldRow('3-2 上期電表度數', getVal('e3_2')+' 度');
+  html += fieldRow('3-3 本期電表度數', getVal('e3_3')+' 度');
+  html += fieldRow('3-4 本期用電度數', gv('e3_4')||'-', parseFloat(gv('e3_4'))<0);
+
+  html += subHeader('4. 七樓電費');
+  html += fieldRow('4-1 流動電費', gv('e4_1')||'-', parseFloat(gv('e4_1'))<0);
+  lastTierRows.forEach((r,i)=>{
+    if(r.nsKwh<=0 && r.sKwh<=0) return;
+    html += fieldRow(`　${priceTiers[i].label}`, `${fmt(r.subtotal)} 元`, r.subtotal<0);
+  });
+  html += fieldRow('4-2 公共設施電費', gv('e4_2'));
+  html += fieldRow('4-3 補收(退)金額', gv('e4_3'), parseFloat(gv('e4_3'))<0);
+  html += fieldRow('4-4 節電獎勵', gv('e4_4'), parseFloat(gv('e4_4'))<0);
+  html += fieldRow('4-5 本期電費', gv('e4_5'), parseFloat(gv('e4_5'))<0);
+  html += `<div style="font-size:8.5px;color:#6B6A63;margin-top:3px;">${document.getElementById('e4_5_formula').textContent}</div>`;
+  return html;
+}
+
+function buildWaterColumnHtml(){
+  let html = `<div style="font-size:14px;font-weight:700;color:#009688;margin-bottom:6px;">水費</div>`;
+  html += subHeader('5. 水費帳單資訊');
+  html += fieldRow('5-1 用水計算期間', (gv('e5_1_start')||'-') + ' ~ ' + (gv('e5_1_end')||'-'));
+  html += fieldRow('5-2 總天數', gv('e5_2')||'-');
+  html += fieldRow('5-3 本期用水度數', getVal('e5_3')+' 度');
+  html += fieldRow('5-4 基本費', fmt(getVal('e5_4'))+' 元', getVal('e5_4')<0);
+  html += fieldRow('5-5 用水費', fmt(getVal('e5_5'))+' 元', getVal('e5_5')<0);
+  html += fieldRow('5-6 代徵費', fmt(getVal('e5_6'))+' 元', getVal('e5_6')<0);
+
+  html += subHeader('6. 七樓水表');
+  html += fieldRow('6-1 抄表日期', gv('e6_1')||'-');
+  html += fieldRow('6-2 上期水表度數', getVal('e6_2')+' 度');
+  html += fieldRow('6-3 本期水表度數', getVal('e6_3')+' 度');
+  html += fieldRow('6-4 本期用水度數', gv('e6_4')||'-', parseFloat(gv('e6_4'))<0);
+
+  html += subHeader('7. 七樓水費');
+  html += fieldRow('7-1 基本費', gv('e7_1'), parseFloat(gv('e7_1'))<0);
+  html += fieldRow('7-2 用水費', gv('e7_2'), parseFloat(gv('e7_2'))<0);
+  html += fieldRow('7-3 代徵費', gv('e7_3'), parseFloat(gv('e7_3'))<0);
+  html += fieldRow('7-4 本期水費', gv('e7_4'), parseFloat(gv('e7_4'))<0);
+  html += `<div style="font-size:8.5px;color:#6B6A63;margin-top:3px;">${document.getElementById('e7_4_formula').textContent}</div>`;
+  return html;
+}
+
+function buildPhotosHtml(widthCm){
+  const gap = 0.25;
+  const photoW = (widthCm - gap*3)/4; // 4張並排，寬度會 >= 4cm
+  const captions = [
+    ['e2_8','電費帳單'], ['e3_5','七樓電表'], ['e5_7','水費帳單'], ['e6_5','七樓水表']
+  ];
+  let html = `<div style="margin-top:12px;padding-top:10px;border-top:2px solid #AE2E24;display:flex;gap:${gap}cm;">`;
+  captions.forEach(([key,label])=>{
+    const p = photos[key];
+    html += `<div style="width:${photoW}cm;text-align:center;">
+      <div style="font-size:9px;font-weight:700;margin-bottom:4px;">${label}</div>`;
+    if(p){
+      html += `<img src="${p.dataUrl}" style="width:${photoW}cm;height:auto;display:block;border:1px solid #ccc;border-radius:4px;margin:0 auto;">`;
+    } else {
+      html += `<div style="width:${photoW}cm;height:${(photoW*1.3).toFixed(2)}cm;border:1px dashed #ccc;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;color:#999;">尚未上傳</div>`;
+    }
+    html += `</div>`;
+  });
+  html += `</div>`;
+  return html;
+}
+
+function buildPdfPrintElement(widthCm){
+  const wrap = document.createElement('div');
+  wrap.style.cssText = `position:absolute;left:-10000px;top:0;width:${widthCm}cm;background:#ffffff;color:#20231F;font-family:'Noto Sans TC','Microsoft JhengHei','PingFang TC',sans-serif;padding:0;box-sizing:border-box;`;
+
+  let html = `<div style="text-align:center;border-bottom:3px solid #AE2E24;padding-bottom:10px;margin-bottom:14px;">
+    <div style="font-size:19px;font-weight:700;color:#AE2E24;">${totalHeaderText()}</div>
+  </div>`;
+
+  html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8cm;align-items:start;">`;
+  html += `<div>${buildElectricityColumnHtml()}</div>`;
+  html += `<div>${buildWaterColumnHtml()}</div>`;
+  html += `</div>`;
+
+  html += buildPhotosHtml(widthCm);
+
+  wrap.innerHTML = html;
+  return wrap;
+}
+
+// /* ============ PDF 匯出（以正體中文顯示，透過 html2canvas 擷取實際渲染畫面，避免亂碼；整體等比縮放確保集中於A4單頁不裁切）============ */
+// async function exportPDF(){
+//   const { jsPDF } = window.jspdf;
+//   const pageW = 21, pageH = 29.7;
+//   const margin = 1.2;
+//   const contentW = pageW - margin*2;
+
+//   const printEl = buildPdfPrintElement(contentW);
+//   document.body.appendChild(printEl);
+
+//   try{
+//     const canvas = await html2canvas(printEl, { scale: 5, backgroundColor: '#ffffff', useCORS: true, logging:false });
+//     const imgData = canvas.toDataURL('image/jpeg');
+//     const aspect = canvas.height / canvas.width;
+
+//     let imgW = contentW;
+//     let imgH = contentW * aspect;
+//     const usableH = pageH - margin*2;
+//     let x = margin, y = margin;
+//     if(imgH > usableH){
+//       const scale = usableH / imgH;
+//       imgW = imgW * scale;
+//       imgH = usableH;
+//       x = margin + (contentW - imgW) / 2;
+//     }
+
+//     const doc = new jsPDF({ unit:'cm', format:'a4' });
+//     doc.addImage(imgData, 'JPEG', x, y, imgW, imgH);
+//     doc.save(reportFileNameBase() + '.pdf');
+//   } finally {
+//     document.body.removeChild(printEl);
+//   }
+// }
+
+// /* ============ 分享至 LINE（正體中文內容）============ */
+// function shareToLine(){
+//   const { title, model } = buildReportModelZh();
+//   const lines = [title, ''];
+//   model.forEach(item=>{
+//     if(item.type === 'heading'){ lines.push(''); lines.push('【' + item.text + '】'); }
+//     else { lines.push((item.neg ? '* ' : '') + item.text); }
+//   });
+//   const text = lines.join('\n');
+//   const url = 'https://line.me/R/msg/text/?' + encodeURIComponent(text);
+//   window.open(url, '_blank');
+// }
+
+/* =========================================================
+   PDF產生核心
+   HTML → html2canvas → jsPDF → File
+========================================================= */
+
+async function createPDFFile(){
+
+    const { jsPDF } = window.jspdf;
+
+
+    const pageW = 21;       // A4 寬 cm
+    const pageH = 29.7;     // A4 高 cm
+
+    const margin = 1.2;
+
+    const contentW = pageW - margin * 2;
+
+
+
+    // 建立PDF專用HTML
+    const printEl = buildPdfPrintElement(contentW);
+
+    document.body.appendChild(printEl);
+
+
+
+    try{
+
+
+        const canvas = await html2canvas(printEl, {
+
+            scale:5,
+
+            backgroundColor:'#ffffff',
+
+            useCORS:true,
+
+            logging:false
+
+        });
+
+
+
+        const imgData = canvas.toDataURL(
+            'image/jpeg',
+            1.0
+        );
+
+
+        const aspect = canvas.height / canvas.width;
+
+
+
+        let imgW = contentW;
+
+        let imgH = contentW * aspect;
+
+
+        const usableH = pageH - margin * 2;
+
+
+
+        let x = margin;
+
+        let y = margin;
+
+
+
+        // 超過A4高度，自動縮放
+        if(imgH > usableH){
+
+
+            const scale = usableH / imgH;
+
+
+            imgW = imgW * scale;
+
+            imgH = usableH;
+
+
+            x = margin + (contentW - imgW) / 2;
+
+
+        }
+
+
+
+        const doc = new jsPDF({
+
+            unit:'cm',
+
+            format:'a4'
+
+        });
+
+
+
+        doc.addImage(
+
+            imgData,
+
+            'JPEG',
+
+            x,
+
+            y,
+
+            imgW,
+
+            imgH
+
+        );
+
+
+
+        // 回傳 PDF Blob
+
+        const blob = doc.output('blob');
+
+
+
+        // 轉 File
+
+        const file = new File(
+
+            [
+                blob
+            ],
+
+            reportFileNameBase() + '.pdf',
+
+            {
+
+                type:'application/pdf'
+
+            }
+
+        );
+
+
+        return file;
+
+
+
+    }
+
+    finally{
+
+
+        document.body.removeChild(printEl);
+
+
+    }
+
+
+}
+
+
+
+
+
+/* =========================================================
+   PDF下載
+========================================================= */
+
+
+async function exportPDF(){
+
+
+    try{
+
+
+        const pdfFile = await createPDFFile();
+
+
+
+        const url = URL.createObjectURL(pdfFile);
+
+
+
+        const link = document.createElement('a');
+
+
+        link.href = url;
+
+
+        link.download = pdfFile.name;
+
+
+        document.body.appendChild(link);
+
+
+        link.click();
+
+
+        document.body.removeChild(link);
+
+
+
+        URL.revokeObjectURL(url);
+
+
+
+    }
+
+    catch(error){
+
+
+        console.error(error);
+
+
+        alert(
+            "PDF產生失敗"
+        );
+
+
+    }
+
+
+}
+
+
+
+
+
+/* =========================================================
+   分享 PDF 至 LINE
+   手機：使用系統分享
+========================================================= */
+
+
+async function shareToLine(){
+
+
+    try{
+              const pdfFile = await createPDFFile();
+
+        /*
+          判斷瀏覽器是否支援
+          分享檔案功能
+        */
+
+        if(
+
+            navigator.canShare &&
+
+            navigator.canShare({
+
+                files:[
+                    pdfFile
+                ]
+
+            })
+
+        ){
+                      await navigator.share({
+                          title:
+                "PDF文件",
+                                text:
+                "請查看附件 PDF",
+                                files:[
+
+                    pdfFile
+
+                ]
+                          });
+                      }
+
+        else{
+            /*
+              不支援手機分享
+              改下載PDF
+            */
+            const url =
+            URL.createObjectURL(pdfFile);
+
+            const link =
+            document.createElement('a');
+                        link.href = url;
+                        link.download =
+            pdfFile.name;
+
+            document.body.appendChild(link);
+                        link.click();
+
+            document.body.removeChild(link);
+
+            URL.revokeObjectURL(url);
+
+            alert(
+                "此裝置不支援直接分享，已改為下載PDF"
+            );
+                  }
+
+    }
+
+    catch(error){
+              console.error(error);
+
+        }
+  }
+
+/* ============ 初始化 ============ */
+buildPriceTable();
+bindInputs();
+['e2_8','e3_5','e5_7','e6_5'].forEach(setupPhotoUpload);
+document.getElementById('btnExcel').addEventListener('click', ()=> exportExcel());
+document.getElementById('btnPdf').addEventListener('click', ()=> exportPDF());
+document.getElementById('btnLine').addEventListener('click', ()=> shareToLine());
+recalcAll();
+tryFetchTaipowerData();
+</script>
+</body>
+</html>
