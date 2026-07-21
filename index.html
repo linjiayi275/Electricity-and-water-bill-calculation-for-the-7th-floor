@@ -104,10 +104,20 @@
     font-size:14.5px;
     background:#fff;
   }
-  .field input[type=date]{
-    /* width: calc(100% - 16px); */
-    padding-inline-start: 0px;
-  }
+  /* .field input[type=date]{
+    width: calc(100% - 16px);
+  } */
+  .field input[type="date"]{
+    width:100%;
+    min-width:0;
+    box-sizing:border-box;
+
+    appearance:none;
+    -webkit-appearance:none;
+
+    display:block;
+    flex:1;
+}
   .field input[readonly]{
     background:#f1f1f1;color:var(--ink);font-weight:700;
   }
